@@ -11,7 +11,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
+      home: const Scaffold(
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -19,19 +19,10 @@ class MainApp extends StatelessWidget {
           ),
         ),
         // appBar: AppBar(),
-        backgroundColor: const Color(0xFFFF9494),
+        backgroundColor: Color(0xFFFF9494),
       ),
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: "Poppins"),
     );
   }
 }
-
-// Poppins
-// Lato
-// Raleway
-// Nunito Sans
-// Fira Sans
-// Barlow
-// Josefin Sans
-// Jost
