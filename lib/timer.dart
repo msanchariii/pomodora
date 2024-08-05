@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 
 enum TimerState { paused, stopped, playing }
 
-enum PomodoroState { workingTime, breakTime }
+enum PomodoroState { workstate, breakstate }
 
 // ignore: constant_identifier_names
 const int WORKTIME = 1 * 60;
@@ -13,34 +13,35 @@ const int WORKTIME = 1 * 60;
 const int BREAKTIME = 5 * 60;
 
 class TimerLabel extends StatefulWidget {
-  TimerLabel({super.key});
-  TimerState timerState = TimerState.stopped;
-  Duration timeLeft = const Duration(seconds: WORKTIME);
-  Timer _t = Timer(const Duration(seconds: 1), () {});
-  PomodoroState pomodoroState = PomodoroState.workingTime;
+  const TimerLabel({super.key});
 
   @override
   State<TimerLabel> createState() => _TimerLabelState();
 }
 
 class _TimerLabelState extends State<TimerLabel> {
+  TimerState timerState = TimerState.stopped;
+  Duration timeLeft = const Duration(seconds: WORKTIME);
+  Timer _t = Timer(const Duration(seconds: 1), () {});
+  PomodoroState pomodoroState = PomodoroState.workstate;
+
   decreaseTimer(Timer timer) {
     setState(() {
-      if (widget.timeLeft.inSeconds == 0) {
-        switch (widget.pomodoroState) {
-          case PomodoroState.workingTime:
-            widget.pomodoroState = PomodoroState.breakTime;
-            widget.timeLeft = const Duration(seconds: BREAKTIME);
+      if (timeLeft.inSeconds == 0) {
+        switch (pomodoroState) {
+          case PomodoroState.workstate:
+            pomodoroState = PomodoroState.breakstate;
+            timeLeft = const Duration(seconds: BREAKTIME);
             break;
-          case PomodoroState.breakTime:
-            widget.pomodoroState = PomodoroState.workingTime;
-            widget.timeLeft = const Duration(seconds: WORKTIME);
+          case PomodoroState.breakstate:
+            pomodoroState = PomodoroState.workstate;
+            timeLeft = const Duration(seconds: WORKTIME);
 
             break;
           // default:
         }
       }
-      widget.timeLeft = Duration(seconds: widget.timeLeft.inSeconds - 1);
+      timeLeft = Duration(seconds: timeLeft.inSeconds - 1);
     });
   }
 
@@ -48,35 +49,31 @@ class _TimerLabelState extends State<TimerLabel> {
     // print("playing");
     HapticFeedback.lightImpact();
     setState(() {
-      widget._t = Timer.periodic(const Duration(seconds: 1), decreaseTimer);
-      widget.timerState = TimerState.playing;
+      _t = Timer.periodic(const Duration(seconds: 1), decreaseTimer);
+      timerState = TimerState.playing;
     });
   }
 
   pauseTimer() {
     HapticFeedback.lightImpact();
     setState(() {
-      widget.timerState = TimerState.paused;
-      widget._t.cancel();
+      timerState = TimerState.paused;
+      _t.cancel();
     });
   }
 
   stopTimer() {
-    // print("stopTimer");
+    HapticFeedback.heavyImpact();
     setState(() {
-      widget.timerState = TimerState.stopped;
-      widget._t.cancel();
-      if (widget.pomodoroState == PomodoroState.workingTime) {
-        widget.timeLeft = const Duration(minutes: 25);
-      } else {
-        widget.timeLeft = const Duration(minutes: 5);
-      }
+      pomodoroState = PomodoroState.workstate;
+      timerState = TimerState.stopped;
+      _t.cancel();
+      timeLeft = const Duration(seconds: WORKTIME);
     });
-    // print(widget.timerState);
   }
 
   computeIcon() {
-    if (widget.timerState == TimerState.playing) {
+    if (timerState == TimerState.playing) {
       return const Icon(Icons.pause, color: Color(0xFFFFF5E4));
     } else {
       return const Icon(Icons.play_arrow, color: Color(0xFFFFF5E4));
@@ -84,8 +81,7 @@ class _TimerLabelState extends State<TimerLabel> {
   }
 
   computeButtonCallback() {
-    if (widget.timerState == TimerState.paused ||
-        widget.timerState == TimerState.stopped) {
+    if (timerState == TimerState.paused || timerState == TimerState.stopped) {
       return playTimer;
     } else {
       return pauseTimer;
@@ -93,16 +89,36 @@ class _TimerLabelState extends State<TimerLabel> {
   }
 
   computePomodoroText() {
-    if (widget.pomodoroState == PomodoroState.breakTime) {
-      return "Take a break";
-    } else {
-      return "Hop on";
+    // if (pomodoroState == PomodoroState.breakTime) {
+    //   return "Take a break";
+    // } else {
+    //     if (timerState == TimerState.playing) {
+    //       return "Focus";
+    //     } else{
+    //         return "";
+    //     }
+    // }
+    switch (timerState) {
+      case TimerState.playing:
+        if (pomodoroState == PomodoroState.breakstate) {
+          return "Take a break";
+        } else {
+          return "Focus";
+        }
+      case TimerState.paused:
+        if (pomodoroState == PomodoroState.breakstate) {
+          return "Paused : BreakTime";
+        } else {
+          return "Paused : FocusTime";
+        }
+      case TimerState.stopped:
+        return "Start the timer";
+      default:
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // print("widget is building");
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -111,7 +127,7 @@ class _TimerLabelState extends State<TimerLabel> {
           margin: const EdgeInsets.fromLTRB(0, 0, 0, 20),
           // color: Colors.blue[200],
           child: Text(
-            "${widget.timeLeft.inMinutes.remainder(60)}:${(widget.timeLeft.inSeconds.remainder(60).toString().padLeft(2, '0'))}",
+            "${timeLeft.inMinutes.remainder(60)}:${(timeLeft.inSeconds.remainder(60).toString().padLeft(2, '0'))}",
             style: const TextStyle(
                 fontSize: 36,
                 fontWeight: FontWeight.bold,
@@ -130,8 +146,8 @@ class _TimerLabelState extends State<TimerLabel> {
                   strokeCap: StrokeCap.round,
                   strokeWidth: 10,
                   color: const Color(0xFFFFF5E4),
-                  value: widget.timeLeft.inSeconds.toDouble() /
-                      (widget.pomodoroState == PomodoroState.workingTime
+                  value: timeLeft.inSeconds.toDouble() /
+                      (pomodoroState == PomodoroState.workstate
                           ? WORKTIME.toDouble()
                           : BREAKTIME.toDouble()),
                 ),
@@ -152,22 +168,26 @@ class _TimerLabelState extends State<TimerLabel> {
         ),
         Container(
           // color: Colors.blue[200],
-          margin: const EdgeInsets.all(20),
+          margin: const EdgeInsets.fromLTRB(0, 50, 0, 20),
           child: Text(
             computePomodoroText(),
-            style: const TextStyle(fontSize: 24, color: Color(0xFFFFF5E4)),
+            style: const TextStyle(
+                fontSize: 36,
+                color: Color(0xFFFFF5E4),
+                fontWeight: FontWeight.bold),
           ),
         ),
-        widget.timerState != TimerState.stopped
-            ? Container(
+        timerState != TimerState.stopped
+            ? SizedBox(
                 height: 100,
-                // color: Colors.blue[200],
                 width: 100,
                 child: IconButton(
-                    onPressed: stopTimer,
-                    icon: const Icon(Icons.stop_circle_outlined),
-                    iconSize: 50,
-                    color: const Color(0xFFFFF5E4)))
+                  onPressed: stopTimer,
+                  icon: const Icon(Icons.stop_circle_outlined),
+                  iconSize: 50,
+                  color: const Color(0xFFFFF5E4),
+                ),
+              )
             : const SizedBox(
                 height: 100,
                 width: 100,
