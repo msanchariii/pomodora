@@ -32,8 +32,6 @@ class _TimerLabelState extends State<TimerLabel> {
   Timer _t = Timer(const Duration(seconds: 1), () {});
   PomodoroState pomodoroState = PomodoroState.workstate;
 
-<<<<<<< Updated upstream
-=======
   @override
   void dispose() {
     // _controller.dispose();
@@ -52,7 +50,6 @@ class _TimerLabelState extends State<TimerLabel> {
     // _controller.forward();
   }
 
->>>>>>> Stashed changes
   // decreases the timer count for each second
   decreaseTimer(Timer timer) {
     setState(() {
@@ -188,14 +185,7 @@ class _TimerLabelState extends State<TimerLabel> {
                       strokeCap: StrokeCap.round,
                       strokeWidth: 10,
                       color: const Color(0xFFFFF5E4),
-<<<<<<< Updated upstream
-                      value: timeLeft.inSeconds.toDouble() /
-                          (pomodoroState == PomodoroState.workstate
-                              ? WORKTIME.toDouble()
-                              : BREAKTIME.toDouble()),
-=======
                       value: computeProgressValue(),
->>>>>>> Stashed changes
                     ),
                   ),
                 ),
