@@ -25,6 +25,7 @@ class _TimerLabelState extends State<TimerLabel> {
   Timer _t = Timer(const Duration(seconds: 1), () {});
   PomodoroState pomodoroState = PomodoroState.workstate;
 
+  // decreases the timer count for each second
   decreaseTimer(Timer timer) {
     setState(() {
       if (timeLeft.inSeconds == 0) {
@@ -36,17 +37,15 @@ class _TimerLabelState extends State<TimerLabel> {
           case PomodoroState.breakstate:
             pomodoroState = PomodoroState.workstate;
             timeLeft = const Duration(seconds: WORKTIME);
-
             break;
-          // default:
         }
       }
       timeLeft = Duration(seconds: timeLeft.inSeconds - 1);
     });
   }
 
+  // starts the timer if timer is stopper or paused
   playTimer() {
-    // print("playing");
     HapticFeedback.lightImpact();
     setState(() {
       _t = Timer.periodic(const Duration(seconds: 1), decreaseTimer);
@@ -54,6 +53,7 @@ class _TimerLabelState extends State<TimerLabel> {
     });
   }
 
+  // pauses the timer
   pauseTimer() {
     HapticFeedback.lightImpact();
     setState(() {
@@ -62,6 +62,7 @@ class _TimerLabelState extends State<TimerLabel> {
     });
   }
 
+  // stops and resets the timer
   stopTimer() {
     HapticFeedback.heavyImpact();
     setState(() {
@@ -80,6 +81,14 @@ class _TimerLabelState extends State<TimerLabel> {
     }
   }
 
+  computeColor() {
+    if (pomodoroState == PomodoroState.workstate) {
+      return const Color(0xff68a691);
+    } else {
+      return const Color(0xFFFF9494);
+    }
+  }
+
   computeButtonCallback() {
     if (timerState == TimerState.paused || timerState == TimerState.stopped) {
       return playTimer;
@@ -89,15 +98,6 @@ class _TimerLabelState extends State<TimerLabel> {
   }
 
   computePomodoroText() {
-    // if (pomodoroState == PomodoroState.breakTime) {
-    //   return "Take a break";
-    // } else {
-    //     if (timerState == TimerState.playing) {
-    //       return "Focus";
-    //     } else{
-    //         return "";
-    //     }
-    // }
     switch (timerState) {
       case TimerState.playing:
         if (pomodoroState == PomodoroState.breakstate) {
@@ -119,80 +119,80 @@ class _TimerLabelState extends State<TimerLabel> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          margin: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-          // color: Colors.blue[200],
-          child: Text(
-            "${timeLeft.inMinutes.remainder(60)}:${(timeLeft.inSeconds.remainder(60).toString().padLeft(2, '0'))}",
-            style: const TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFFFFF5E4)),
-          ),
-        ),
-        Stack(
+    return Scaffold(
+        backgroundColor: computeColor(),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Center(
-              child: SizedBox(
-                // backgroundColor: Colors.blue[200],
-
-                width: 250,
-                height: 250,
-                child: CircularProgressIndicator(
-                  strokeCap: StrokeCap.round,
-                  strokeWidth: 10,
-                  color: const Color(0xFFFFF5E4),
-                  value: timeLeft.inSeconds.toDouble() /
-                      (pomodoroState == PomodoroState.workstate
-                          ? WORKTIME.toDouble()
-                          : BREAKTIME.toDouble()),
-                ),
+            Container(
+              margin: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+              child: Text(
+                "${timeLeft.inMinutes.remainder(60)}:${(timeLeft.inSeconds.remainder(60).toString().padLeft(2, '0'))}",
+                style: const TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFFFF5E4)),
               ),
             ),
-            Center(
-              child: SizedBox(
-                width: 250,
-                height: 250,
-                child: IconButton(
-                  onPressed: computeButtonCallback(),
-                  icon: computeIcon(),
-                  iconSize: 180,
+            Stack(
+              children: [
+                Center(
+                  child: SizedBox(
+                    width: 250,
+                    height: 250,
+                    child: CircularProgressIndicator(
+                      strokeCap: StrokeCap.round,
+                      strokeWidth: 10,
+                      color: const Color(0xFFFFF5E4),
+                      value: timeLeft.inSeconds.toDouble() /
+                          (pomodoroState == PomodoroState.workstate
+                              ? WORKTIME.toDouble()
+                              : BREAKTIME.toDouble()),
+                    ),
+                  ),
                 ),
+                Center(
+                  child: SizedBox(
+                    width: 250,
+                    height: 250,
+                    child: IconButton(
+                      onPressed: computeButtonCallback(),
+                      icon: computeIcon(),
+                      iconSize: 180,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              margin: const EdgeInsets.fromLTRB(0, 50, 0, 20),
+              child: Text(
+                computePomodoroText(),
+                style: const TextStyle(
+                    fontSize: 36,
+                    color: Color(0xFFFFF5E4),
+                    fontWeight: FontWeight.bold),
               ),
             ),
+            timerState != TimerState.stopped
+                ? SizedBox(
+                    height: 100,
+                    width: 100,
+                    child: IconButton(
+                      onPressed: stopTimer,
+                      icon: const Icon(Icons.stop_circle_outlined),
+                      iconSize: 50,
+                      color: const Color(0xFFFFF5E4),
+                    ),
+                  )
+                : const SizedBox(
+                    height: 100,
+                    width: 100,
+                  )
           ],
-        ),
-        Container(
-          // color: Colors.blue[200],
-          margin: const EdgeInsets.fromLTRB(0, 50, 0, 20),
-          child: Text(
-            computePomodoroText(),
-            style: const TextStyle(
-                fontSize: 36,
-                color: Color(0xFFFFF5E4),
-                fontWeight: FontWeight.bold),
-          ),
-        ),
-        timerState != TimerState.stopped
-            ? SizedBox(
-                height: 100,
-                width: 100,
-                child: IconButton(
-                  onPressed: stopTimer,
-                  icon: const Icon(Icons.stop_circle_outlined),
-                  iconSize: 50,
-                  color: const Color(0xFFFFF5E4),
-                ),
-              )
-            : const SizedBox(
-                height: 100,
-                width: 100,
-              )
-      ],
-    );
+        ));
   }
 }
+
+// #68a691
