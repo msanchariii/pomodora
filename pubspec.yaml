@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_soloud: ^2.0.2
+  logger: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -23,3 +25,5 @@ flutter:
       fonts:
         - asset: assets/fonts/Poppins/Poppins-Regular.ttf
         - asset: assets/fonts/Poppins/Poppins-Bold.ttf
+  assets:
+    - assets/audio/
